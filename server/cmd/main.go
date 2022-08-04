@@ -1,30 +1,19 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/contrib/static"
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
-	// Set the router as the default one shipped with Gin
-	router := gin.Default()
+	e := echo.New()
 
-	// Serve frontend static files
-	router.Use(static.Serve("/", static.LocalFile("../client/build", true)))
-	router.SetTrustedProxies([]string{"127.0.0.1"})
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "==> STATUS=${status}, METHOD=${method}, HOST=${host}, URI=${uri}, " +
+			"ERROR=${error}, LATENCY_HUMAN=${latency_human}\n",
+	}))
 
-	// Setup route group for the API
-	api := router.Group("/api")
-	{
-		api.GET("/", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"message": "pong",
-			})
-		})
-	}
+	e.Static("/", "../client/build")
 
-	// Start and run the server
-	router.Run(":5000")
+	e.Logger.Fatal(e.Start(":5000"))
 }
